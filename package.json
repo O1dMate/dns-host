@@ -1,6 +1,6 @@
 {
   "name": "dns-host",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "This is a simple, lightweight DNS server written in pure JavaScript with no external dependencies",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,11 @@
     "javascript",
     "server"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/O1dMate/dns-host"
+  },
+  "homepage": "https://github.com/O1dMate/dns-host#readme",
   "author": "o1dmate",
   "license": "MIT"
 }

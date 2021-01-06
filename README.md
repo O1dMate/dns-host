@@ -258,4 +258,4 @@ example.com                 # Enter a domain you want to retrieve the record for
 # Issues & TODO
  * IPv6 address validation is not fully done.
  * No TCP server.
- * No length enforcement. If a large payload is given for a TXT record, or too many IP addresses are returned for an A or AAAA record, the response will be received correctly.
+ * No length enforcement. If a large payload is given for a TXT record, or too many IP addresses are returned for an A or AAAA record, the response will be received incorrectly.
