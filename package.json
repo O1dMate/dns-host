@@ -1,0 +1,17 @@
+{
+  "name": "dns-host",
+  "version": "1.0.0",
+  "description": "This is a simple DNS server written in pure JavaScript with no external dependencies.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dns",
+    "node",
+    "javascript",
+    "server"
+  ],
+  "author": "o1dmate",
+  "license": "ISC"
+}
