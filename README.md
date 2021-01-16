@@ -158,6 +158,31 @@ dnsServer.on('request', (data) => {
 
 <br>
 
+## Responding to DNS Queries (NS Records)
+```javascript
+dnsServer.on('request', (data) => {
+    console.log('Data:', data);
+    // Example:
+    // Data: { domain: 'example.com', recordType: 'NS', id: 12, fromIp: '1.2.3.4' }
+
+    // Respond with a single string
+    return 'ns1.example.com';
+})
+```
+
+```javascript
+dnsServer.on('request', (data) => {
+    console.log('Data:', data);
+    // Example:
+    // Data: { domain: 'example.com', recordType: 'NS', id: 24, fromIp: '1.2.3.4' }
+
+    // Respond with a list of strings
+    return ['ns1.example.com', 'ns2.example.com'];
+})
+```
+
+<br>
+
 # Options
  * `importantRecordTypes` - The DNS request must be one of these types otherwise it will not call the `request` callback. Good if you only care about certain record types. Default value is that all received queries will call the `request` callback.
 

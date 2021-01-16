@@ -412,7 +412,7 @@ class DnsServer {
         try {
             SERVER_SOCKET = dgram.createSocket('udp4');
 
-            SERVER_SOCKET.on('message', (message, messageInfo) => {
+            SERVER_SOCKET.on('message', async (message, messageInfo) => {
                 try {
                     let dnsRequestData = decodeRequest(Uint8Array.from(Buffer.from(message, 'utf8')), EXTENDED_MODE);
 
@@ -432,7 +432,13 @@ class DnsServer {
                         let domain = dnsRequestData[0].domain;
                         let id = dnsRequestData[0].id;
                         let recordType = dnsRequestData[0].recordType;
-                        let responseData = CALLBACK_ON_REQUEST(dnsRequestData[0]);
+                        let responseData;
+
+                        if (CALLBACK_ON_REQUEST.constructor.name === 'AsyncFunction') {
+                            responseData = await CALLBACK_ON_REQUEST(dnsRequestData[0]);
+                        } else {
+                            responseData = CALLBACK_ON_REQUEST(dnsRequestData[0]);
+                        }
     
                         if (!responseData) return;
 
