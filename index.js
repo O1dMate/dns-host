@@ -586,6 +586,4 @@ checks2.map(x => x[0] === x[1]).forEach((x, index) => {
     }
 });
 
-module.exports = {
-    DnsServer
-}
+module.exports = DnsServer;

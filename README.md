@@ -45,11 +45,7 @@ There are 4 callbacks that you can setup for the server (all of which are option
 
 ## Listening for DNS Queries (All Record Types)
 ```javascript
-// This is will also work
-// const dns = require('dns-host');
-// const dnsServer = new dns.DnsServer();
-
-const { DnsServer } = require('dns-host');
+const DnsServer = require('dns-host');
 const dnsServer = new DnsServer();
 
 dnsServer.on('request', (data) => {
@@ -187,7 +183,7 @@ dnsServer.on('request', (data) => {
  * `importantRecordTypes` - The DNS request must be one of these types otherwise it will not call the `request` callback. Good if you only care about certain record types. Default value is that all received queries will call the `request` callback.
 
 ```javascript
-const { DnsServer } = require('dns-host');
+const DnsServer = require('dns-host');
 
 const dnsServer = new DnsServer({
     importantRecordTypes: ['A', 'AAAA']
@@ -211,7 +207,7 @@ dnsServer.on('request', (data) => {
  * `localhostOnly` - The DNS server will listen only on localhost (`127.0.0.1`) instead of on all interfaces (`0.0.0.0`). Default value is to listen on all interfaces (`0.0.0.0`).
 
 ```javascript
-const { DnsServer } = require('dns-host');
+const DnsServer = require('dns-host');
 
 const dnsServer = new DnsServer({
     localhostOnly: true
@@ -222,7 +218,7 @@ const dnsServer = new DnsServer({
  * `extendedMode` - Return all the decoded information from the DNS header in the 'request' callback. Default value is non-extended mode.
 
 ```javascript
-const { DnsServer } = require('dns-host');
+const DnsServer = require('dns-host');
 
 const dnsServer = new DnsServer({
     extendedMode: true
