@@ -1,4 +1,7 @@
 const dgram = require('dgram');
+const net = require('net');
+const isIPv4 = net.isIPv4;
+const isIPv6 = net.isIPv6;
 
 const RECORD_ID_TO_TYPE_LOOKUP = {
     1: 'A',
@@ -32,40 +35,6 @@ const RECORD_ID_TO_TYPE_LOOKUP = {
 };
 
 const RECORD_TYPE_TO_ID_LOOKUP = {};
-
-const checkIfValidIPv4Address = (ipString) => {
-    try {
-        if (!ipString) return false;
-        if (!ipString.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) return false;
-
-        let arrayOfInts = ipString.split('.').map(x => parseInt(x));
-        let intsAreInRange = arrayOfInts.map(x => x >= 0 && x <= 255);
-        let intsAreValid = intsAreInRange.reduce((acum, cur) => acum && cur, true);
-
-        if (!intsAreValid) return false;
-    } catch (err) {
-        return false;
-    }
-
-    return true;
-}
-
-const checkIfValidIPv6Address = (ipString) => {
-    try {
-        if (!ipString) return false;
-        if (ipString.match(/[0-9a-fA-F:]+/).join('') !== ipString) return false;
-        if (ipString.length > 39) return false;
-
-        let pieces = ipString.split(':');
-
-        if (pieces.length > 8) return false;
-        if (pieces.length !== pieces.filter(x => x.length < 5).length) return false;
-    } catch (_) {
-        return false;
-    }
-
-    return true;
-}
 
 const expandIpv6Address = (ipAddress) => {
     let pieces = ipAddress.split(':');
@@ -245,13 +214,13 @@ const construct_A_Record_Response = (requestData, responseIpList) => {
     responseIpList.forEach(responseIp => {
         // Name
         responseBuffer += 'c00c';
-        
+
         // Record Type (A)
         responseBuffer += '00' + RECORD_TYPE_TO_ID_LOOKUP['A'].toString(16).padStart(2, '0');
-        
+
         // Class (IN = 0x0001)
         responseBuffer += '0001';
-        
+
         // TTL - Time to Live (4 Bytes)
         responseBuffer += '00000015';
 
@@ -312,7 +281,7 @@ const construct_TXT_Record_Response = (requestData, responseTextList) => {
         responseBuffer += '00000015';
 
         // Data Length (2 Bytes)
-        responseBuffer += (responseText.length+1).toString(16).padStart(4, '0');
+        responseBuffer += (responseText.length + 1).toString(16).padStart(4, '0');
 
         // TXT Length (1 Byte)
         responseBuffer += responseText.length.toString(16).padStart(2, '0');
@@ -379,7 +348,7 @@ class DnsServer {
             IMPORTANT_RECORD_TYPES = new Map();
 
             importantRecordTypes.forEach(x => {
-                if (typeof(x) === 'string') IMPORTANT_RECORD_TYPES.set(x, true);
+                if (typeof (x) === 'string') IMPORTANT_RECORD_TYPES.set(x, true);
             });
         }
 
@@ -417,10 +386,11 @@ class DnsServer {
                     let dnsRequestData = decodeRequest(Uint8Array.from(Buffer.from(message, 'utf8')), EXTENDED_MODE);
 
                     dnsRequestData = dnsRequestData.filter(request => {
+                        request.fromIp = messageInfo.address.toString();
+
                         if (!IMPORTANT_RECORD_TYPES) return true;
 
                         if (IMPORTANT_RECORD_TYPES && IMPORTANT_RECORD_TYPES.get(request.recordType)) {
-                            request.fromIp = messageInfo.address.toString();
                             return true;
                         }
                         return false;
@@ -439,25 +409,25 @@ class DnsServer {
                         } else {
                             responseData = CALLBACK_ON_REQUEST(dnsRequestData[0]);
                         }
-    
+
                         if (!responseData) return;
 
                         let dnsResponseBuffer;
 
                         if (dnsRequestData[0].recordType === 'A') {
-                            let singleIp = checkIfValidIPv4Address(responseData);
-                            let listOfIps = Array.isArray(responseData) ? responseData.map(x => checkIfValidIPv4Address(x)).reduce((acum, cur) => acum && cur, true) : false;
-                            
+                            let singleIp = isIPv4(responseData);
+                            let listOfIps = Array.isArray(responseData) ? responseData.map(x => isIPv4(x)).reduce((acum, cur) => acum && cur, true) : false;
+
                             if (singleIp) dnsResponseBuffer = construct_A_Record_Response(dnsRequestData[0], [responseData]);
                             else if (listOfIps) dnsResponseBuffer = construct_A_Record_Response(dnsRequestData[0], responseData);
-                            else throw new Error(`DNS Response Error: Response Data is not a valid IPv4 address or list of addresses for (Domain: ${domain}, RecordType: ${recordType}, ID: ${id})`,);
+                            else throw new Error(`DNS Response Error: Response Data is not a valid IPv4 address or list of addresses for (Domain: ${domain}, RecordType: ${recordType}, ID: ${id}).\nResponse provided: ${Array.isArray(responseData) ? JSON.stringify(responseData) : responseData}`,);
                         } else if (dnsRequestData[0].recordType === 'AAAA') {
-                            let singleIp = checkIfValidIPv6Address(responseData);
-                            let listOfIps = Array.isArray(responseData) ? responseData.map(x => checkIfValidIPv6Address(x)).reduce((acum, cur) => acum && cur, true) : false;
+                            let singleIp = isIPv6(responseData);
+                            let listOfIps = Array.isArray(responseData) ? responseData.map(x => isIPv6(x)).reduce((acum, cur) => acum && cur, true) : false;
 
                             if (singleIp) dnsResponseBuffer = construct_AAAA_Record_Response(dnsRequestData[0], [responseData]);
                             else if (listOfIps) dnsResponseBuffer = construct_AAAA_Record_Response(dnsRequestData[0], responseData);
-                            else throw new Error(`DNS Response Error: Response Data is not a valid IPv6 address or list of addresses for (Domain: ${domain}, RecordType: ${recordType}, ID: ${id})`,);
+                            else throw new Error(`DNS Response Error: Response Data is not a valid IPv6 address or list of addresses for (Domain: ${domain}, RecordType: ${recordType}, ID: ${id}).\nResponse provided: ${Array.isArray(responseData) ? JSON.stringify(responseData) : responseData}`,);
                         } else if (dnsRequestData[0].recordType === 'TXT') {
                             let singleText = typeof (responseData) === 'string';
                             let listOfTexts = Array.isArray(responseData) ? responseData.map(x => typeof (x) === 'string').reduce((acum, cur) => acum && cur, true) : false;
@@ -531,21 +501,21 @@ Object.entries(RECORD_ID_TO_TYPE_LOOKUP).forEach(pair => {
 })
 
 const checks1 = [
-    [checkIfValidIPv4Address('0.0.0.0'), true],
-    [checkIfValidIPv4Address('127.0.0.1'), true],
-    [checkIfValidIPv4Address('256.256.256.256'), false],
-    [checkIfValidIPv4Address('1.1.1.1'), true],
-    [checkIfValidIPv4Address('1.1.1.1.'), false],
-    [checkIfValidIPv4Address('1.1.1.1.1'), false],
-    [checkIfValidIPv4Address('.1.1.1.1'), false],
-    [checkIfValidIPv4Address('a.a.a.a'), false],
-    [checkIfValidIPv4Address(''), false],
-    [checkIfValidIPv4Address({}), false],
-    [checkIfValidIPv4Address([]), false],
-    [checkIfValidIPv4Address(0), false],
-    [checkIfValidIPv4Address(1), false],
-    [checkIfValidIPv4Address(null), false],
-    [checkIfValidIPv4Address(undefined), false],
+    [isIPv4('0.0.0.0'), true],
+    [isIPv4('127.0.0.1'), true],
+    [isIPv4('256.256.256.256'), false],
+    [isIPv4('1.1.1.1'), true],
+    [isIPv4('1.1.1.1.'), false],
+    [isIPv4('1.1.1.1.1'), false],
+    [isIPv4('.1.1.1.1'), false],
+    [isIPv4('a.a.a.a'), false],
+    [isIPv4(''), false],
+    [isIPv4({}), false],
+    [isIPv4([]), false],
+    [isIPv4(0), false],
+    [isIPv4(1), false],
+    [isIPv4(null), false],
+    [isIPv4(undefined), false],
 ];
 
 checks1.map(x => x[0] === x[1]).forEach((x, index) => {
@@ -558,23 +528,23 @@ checks1.map(x => x[0] === x[1]).forEach((x, index) => {
 });
 
 const checks2 = [
-    [checkIfValidIPv6Address('2001:db8:1111:2222:3333::51'), true],
-    [checkIfValidIPv6Address('2001:db8:1111:2g22:3333::51'), false],
-    [checkIfValidIPv6Address('2001:db8:1111:2-22:3333::51'), false],
-    [checkIfValidIPv6Address('2001:db8:1111:2%22:3333::51'), false],
-    [checkIfValidIPv6Address('2001:0db8:0000:0000:0000:ff00:0042:8329'), true],
-    [checkIfValidIPv6Address('2001:db8:0:0:0:ff00:42:8329'), true],
-    [checkIfValidIPv6Address('2001:db8::ff00:42:8329'), true],
-    [checkIfValidIPv6Address('2001:0db8:0000:0000:0000:ff00:0042:83291'), false],
-    [checkIfValidIPv6Address('1.1.1.1'), false],
-    [checkIfValidIPv6Address('1.1.1.1.1'), false],
-    [checkIfValidIPv6Address(''), false],
-    [checkIfValidIPv6Address({}), false],
-    [checkIfValidIPv6Address([]), false],
-    [checkIfValidIPv6Address(0), false],
-    [checkIfValidIPv6Address(1), false],
-    [checkIfValidIPv6Address(null), false],
-    [checkIfValidIPv6Address(undefined), false],
+    [isIPv6('2001:db8:1111:2222:3333::51'), true],
+    [isIPv6('2001:db8:1111:2g22:3333::51'), false],
+    [isIPv6('2001:db8:1111:2-22:3333::51'), false],
+    [isIPv6('2001:db8:1111:2%22:3333::51'), false],
+    [isIPv6('2001:0db8:0000:0000:0000:ff00:0042:8329'), true],
+    [isIPv6('2001:db8:0:0:0:ff00:42:8329'), true],
+    [isIPv6('2001:db8::ff00:42:8329'), true],
+    [isIPv6('2001:0db8:0000:0000:0000:ff00:0042:83291'), false],
+    [isIPv6('1.1.1.1'), false],
+    [isIPv6('1.1.1.1.1'), false],
+    [isIPv6(''), false],
+    [isIPv6({}), false],
+    [isIPv6([]), false],
+    [isIPv6(0), false],
+    [isIPv6(1), false],
+    [isIPv6(null), false],
+    [isIPv6(undefined), false],
 ];
 
 checks2.map(x => x[0] === x[1]).forEach((x, index) => {

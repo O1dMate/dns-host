@@ -57,11 +57,11 @@ dnsServer.on('request', (data) => {
     // Data: { domain: 'example.com', recordType: 'NS', id: 15, fromIp: '1.2.3.4' }
 
     return '1.1.1.1';
-})
+});
 
 dnsServer.on('error', (err) => {
     console.log('An Error Occurred:', err);
-})
+});
 
 dnsServer.on('start', () => {
     console.log('DNS server started');
@@ -88,7 +88,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a single IPv4 Address
     return '1.2.3.4';
-})
+});
 ```
 
 ```javascript
@@ -99,7 +99,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a list of IPv4 Addresses
     return ['1.2.3.4', '5.6.7.8'];
-})
+});
 ```
 
 <br>
@@ -113,7 +113,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a single IPv6 Address
     return '2001:db8:1111:2222:3333::51';
-})
+});
 ```
 
 ```javascript
@@ -124,7 +124,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a list of IPv6 Addresses
     return ['2001:db8:1111:2222:3333::51', '::1', '2001:db8::ff00:42:8329'];
-})
+});
 ```
 
 <br>
@@ -138,7 +138,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a single string
     return 'Test String 1';
-})
+});
 ```
 
 ```javascript
@@ -149,7 +149,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a list of strings
     return ['Test String 1', 'Chars: 1234567890!@#$%^&*()_+-=[]'];
-})
+});
 ```
 
 <br>
@@ -163,7 +163,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a single string
     return 'ns1.example.com';
-})
+});
 ```
 
 ```javascript
@@ -174,7 +174,7 @@ dnsServer.on('request', (data) => {
 
     // Respond with a list of strings
     return ['ns1.example.com', 'ns2.example.com'];
-})
+});
 ```
 
 <br>
@@ -200,7 +200,7 @@ dnsServer.on('request', (data) => {
     // Data: { domain: 'test.com', recordType: 'AAAA', id: 13, fromIp: '1.2.3.4' }
 
     return '1.2.3.4';
-})
+});
 ```
 
 
@@ -254,7 +254,7 @@ dnsServer.on('request', (data) => {
     */
 
     return '1.2.3.4';
-})
+});
 ```
 
 <br>
@@ -277,6 +277,5 @@ example.com                 # Enter a domain you want to retrieve the record for
 <br>
 
 # Issues & TODO
- * IPv6 address validation is not fully done.
- * No TCP server.
+ * No support for DNS over HTTPS.
  * No length enforcement. If a large payload is given for a TXT record, or too many IP addresses are returned for an A or AAAA record, the response will be received incorrectly.
